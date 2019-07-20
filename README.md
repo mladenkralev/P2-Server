@@ -1,1 +1,1 @@
-# P2 repository and profile manager instance.
+# Back-end P2 repository and profile manager instance.
