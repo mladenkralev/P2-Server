@@ -11,6 +11,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.HttpService;
 import org.osgi.util.tracker.ServiceTracker;
 import p2.utils.common.ServicesUtil;
+import p2.utils.filter.CORSFilter;
 import p2.utils.rest.ProfileDAO;
 import p2.utils.rest.RepositoryDAO;
 
@@ -30,9 +31,11 @@ public class Activator implements BundleActivator {
         this.bc = bundleContext;
         ServiceReference refHttpService = bc.getServiceReference(HttpService.class.getName());
         HttpService httpService = (HttpService) bc.getService(refHttpService);
-
+        System.out.println("Raboti");
         ResourceConfig repositoryConfiguration = new ResourceConfig(RepositoryDAO.class);
         repositoryConfiguration.register(MultiPartFeature.class);
+        repositoryConfiguration.register(CORSFilter.class);
+
         ServletContainer servletContainer = new ServletContainer(repositoryConfiguration);
         httpService.registerServlet("/api/repository", servletContainer, null, httpService.createDefaultHttpContext());
         scan(RepositoryDAO.class);

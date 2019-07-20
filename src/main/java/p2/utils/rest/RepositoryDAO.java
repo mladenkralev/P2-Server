@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -40,6 +41,8 @@ public class RepositoryDAO {
     private static final Logger logger = Logger.getLogger(RepositoryDAO.class.getName());
     private static final String UPLOAD_DIR_NAME = "uploadDir";
     private static final String REPOSITORY_DIR_NAME = "repositories";
+    private static final String CREATED = "created";
+    private static final String IMPORTED = "imported";
 
     private static final java.nio.file.Path REPOSITORIES = Paths.get(BUILD_DIR, REPOSITORY_DIR_NAME);
     private static final java.nio.file.Path UPLOAD_DIR = Paths.get(BUILD_DIR, UPLOAD_DIR_NAME);
@@ -55,8 +58,8 @@ public class RepositoryDAO {
         deleteAndCreateDirectory(UPLOAD_DIR);
         createIfNotExisting(REPOSITORIES);
 
-        // repositories follow this pattern repositories/<username>/0/<p2FolderRepo>
-        java.nio.file.Path currentWorkingRepository = Paths.get(BUILD_DIR, REPOSITORY_DIR_NAME, userNameQueryParam,
+        // repositories follow this pattern repositories/<username>/<p2FolderRepo>
+        java.nio.file.Path currentWorkingRepository = Paths.get(BUILD_DIR, REPOSITORY_DIR_NAME, userNameQueryParam, CREATED,
                 FileUtil.getUniqueRepositoryName());
 
         createIfNotExisting(currentWorkingRepository);
@@ -101,14 +104,14 @@ public class RepositoryDAO {
             // no users found
         }
 
-        java.nio.file.Path userRepositories = Paths.get(BUILD_DIR, REPOSITORY_DIR_NAME, userNameQueryParam);
+        java.nio.file.Path userRepositories = Paths.get(BUILD_DIR, REPOSITORY_DIR_NAME, userNameQueryParam, CREATED);
         if (!userRepositories.toFile().exists()) {
             // cannot find repositories/<name>
         }
 
         List<File> repositories = Arrays.asList(userRepositories.toFile().listFiles());
         List names = repositories.stream().filter(it -> it.getName().equals(repository)).map(File::getName).collect(Collectors.toList());
-
+        System.out.println("asd");
         if (names.size() == 1) {
             java.nio.file.Path path = Paths.get(BUILD_DIR, REPOSITORY_DIR_NAME, userNameQueryParam, repository);
             FileUtils.deleteDirectory(path.toFile());
@@ -129,7 +132,7 @@ public class RepositoryDAO {
             // no users found
         }
 
-        java.nio.file.Path userRepositories = Paths.get(BUILD_DIR, REPOSITORY_DIR_NAME, userNameQueryParam);
+        java.nio.file.Path userRepositories = Paths.get(BUILD_DIR, REPOSITORY_DIR_NAME, userNameQueryParam, CREATED);
         if (!userRepositories.toFile().exists()) {
             // cannot find repositories/<name>
         }
@@ -137,12 +140,18 @@ public class RepositoryDAO {
         // use P2 api for repos?
         // maybe some more complex object should be returned, that will have something else than name
         List<File> repoDirectories = Arrays.asList(userRepositories.toFile().listFiles());
-        List<Repository> repositories = repoDirectories.stream()
+        List<Repository> createdRepositories = repoDirectories.stream()
                 .map(it -> new Repository(it.getName(), it))
                 .collect(Collectors.toList());
 
+        //TODO imported reposi  tories
+
+
+        Map<String, List> returnedJsonResponse = new HashMap<>();
+        returnedJsonResponse.put("createdRepositories", createdRepositories);
+
         Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
-        String response = gson.toJson(repositories);
+        String response = gson.toJson(returnedJsonResponse);
         return Response.ok(response, MediaType.APPLICATION_JSON).build();
     }
 
@@ -158,15 +167,15 @@ public class RepositoryDAO {
         if (REPOSITORIES.toFile().list().length == 0) {
             // no users found
         }
-
-        java.nio.file.Path userRepositories = Paths.get(BUILD_DIR, REPOSITORY_DIR_NAME, userNameQueryParam);
+        //  TODO IF IMPORTED ADD MORE LOGIC HERE
+        java.nio.file.Path userRepositories = Paths.get(BUILD_DIR, REPOSITORY_DIR_NAME, userNameQueryParam, CREATED);
         if (!userRepositories.toFile().exists()) {
             // cannot find repositories/<name>
         }
 
         // maybe some more complex object should be returned, that will have something else than name
         List<File> repoDirectories = Arrays.asList(userRepositories.toFile().listFiles());
-        for(File file: repoDirectories) {
+        for (File file : repoDirectories) {
             System.out.println(!file.getName().equals(repositoryNameQueryParam));
         }
 
@@ -175,14 +184,49 @@ public class RepositoryDAO {
                 .map(it -> new Repository(it.getName(), it))
                 .collect(Collectors.toList());
 
-        if(repositories.size() == 0) {
+        if (repositories.size() == 0) {
             // must return 4** error
         }
 
         Gson gson = new Gson();
         String response = gson.toJson(repositories);
+        System.out.println(response);
         return Response.ok(response, MediaType.APPLICATION_JSON).build();
     }
+
+    @GET
+    @Path("/get")
+    public Response getAllInstallableUnitsFromAllRepositories(@QueryParam("username") String userNameQueryParam) {
+
+        if (!REPOSITORIES.toFile().exists()) {
+            // RETURN NO REPO FOUNDS
+        }
+
+        if (REPOSITORIES.toFile().list().length == 0) {
+            // no users found
+        }
+        //  TODO IF IMPORTED ADD MORE LOGIC HERE
+        java.nio.file.Path userRepositories = Paths.get(BUILD_DIR, REPOSITORY_DIR_NAME, userNameQueryParam, CREATED);
+        if (!userRepositories.toFile().exists()) {
+            // cannot find repositories/<name>
+        }
+
+        List<File> repoDirectories = Arrays.asList(userRepositories.toFile().listFiles());
+
+        List<Repository> repositories = repoDirectories.stream()
+                .map(it -> new Repository(it.getName(), it))
+                .collect(Collectors.toList());
+
+        if (repositories.size() == 0) {
+            // must return 4** error
+        }
+
+        Gson gson = new Gson();
+        String response = gson.toJson(repositories);
+        System.out.println(response);
+        return Response.ok(response, MediaType.APPLICATION_JSON).build();
+    }
+
 
 
     private void createIfNotExisting(java.nio.file.Path directory) throws IOException {

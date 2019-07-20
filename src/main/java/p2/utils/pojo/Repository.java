@@ -6,6 +6,7 @@ import org.eclipse.equinox.p2.metadata.IInstallableUnit;
 import p2.utils.actions.P2Actions;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 
 public class Repository {
@@ -15,14 +16,18 @@ public class Repository {
     private String repositoryName;
     @Expose
     private int repoSize;
-    
-    private Collection<IInstallableUnit> installableUnits;
+    @Expose
+    private Collection<JsonInstallableUnit> installableUnits = new ArrayList<>();
 
     public Repository(String repositoryName, File repositoryDirectory) {
         this.repositoryName = repositoryName;
         this.repositoryDirectory = repositoryDirectory;
         try {
-            this.installableUnits = P2Actions.getInstallableUnits(repositoryDirectory);
+            Collection<IInstallableUnit> installableUnits = P2Actions.getInstallableUnits(repositoryDirectory);
+            for (IInstallableUnit iu : installableUnits) {
+                this.installableUnits.add(new JsonInstallableUnit(iu));
+            }
+
             this.repoSize = installableUnits.size();
         } catch (ProvisionException e) {
             //ignore for now
