@@ -13,7 +13,7 @@ buildscript {
 }
 
 plugins {
-    id 'org.felix.osgi' version '0.35'
+    id 'org.felix.osgi' version '0.36'
 }
 
 apply plugin: 'java'

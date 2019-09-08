@@ -41,6 +41,8 @@ public class Activator implements BundleActivator {
         scan(RepositoryDAO.class);
 
         ResourceConfig profileConfiguration = new ResourceConfig(ProfileDAO.class);
+        profileConfiguration.register(CORSFilter.class);
+
         ServletContainer profileServletContainer = new ServletContainer(profileConfiguration);
         httpService.registerServlet("/api/profile", profileServletContainer, null, httpService.createDefaultHttpContext());
         scan(ProfileDAO.class);

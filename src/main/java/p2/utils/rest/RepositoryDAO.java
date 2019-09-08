@@ -33,19 +33,13 @@ import java.util.Map.Entry;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static p2.utils.Constants.*;
 import static p2.utils.DeleteConstants.BUILD_DIR;
 
 @Path("/")
 public class RepositoryDAO {
 
     private static final Logger logger = Logger.getLogger(RepositoryDAO.class.getName());
-    private static final String UPLOAD_DIR_NAME = "uploadDir";
-    private static final String REPOSITORY_DIR_NAME = "repositories";
-    private static final String CREATED = "created";
-    private static final String IMPORTED = "imported";
-
-    private static final java.nio.file.Path REPOSITORIES = Paths.get(BUILD_DIR, REPOSITORY_DIR_NAME);
-    private static final java.nio.file.Path UPLOAD_DIR = Paths.get(BUILD_DIR, UPLOAD_DIR_NAME);
 
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -140,18 +134,17 @@ public class RepositoryDAO {
         // use P2 api for repos?
         // maybe some more complex object should be returned, that will have something else than name
         List<File> repoDirectories = Arrays.asList(userRepositories.toFile().listFiles());
-        List<Repository> createdRepositories = repoDirectories.stream()
+        List<Repository> repositories = repoDirectories.stream()
                 .map(it -> new Repository(it.getName(), it))
                 .collect(Collectors.toList());
 
-        //TODO imported reposi  tories
+        if (repositories.size() == 0) {
+            // must return 4** error
+        }
 
-
-        Map<String, List> returnedJsonResponse = new HashMap<>();
-        returnedJsonResponse.put("createdRepositories", createdRepositories);
-
-        Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
-        String response = gson.toJson(returnedJsonResponse);
+        Gson gson = new Gson();
+        String response = gson.toJson(repositories);
+        System.out.println(response);
         return Response.ok(response, MediaType.APPLICATION_JSON).build();
     }
 
@@ -195,7 +188,7 @@ public class RepositoryDAO {
     }
 
     @GET
-    @Path("/get")
+    @Path("/listIUs")
     public Response getAllInstallableUnitsFromAllRepositories(@QueryParam("username") String userNameQueryParam) {
 
         if (!REPOSITORIES.toFile().exists()) {
