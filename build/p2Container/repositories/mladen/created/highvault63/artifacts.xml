@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<?artifactRepository version='1.1.0'?>
+<repository name='Sample Artifact Repository' type='org.eclipse.equinox.p2.artifact.repository.simpleRepository' version='1'>
+  <properties size='1'>
+    <property name='p2.timestamp' value='1569247834034'/>
+  </properties>
+  <mappings size='3'>
+    <rule filter='(&amp; (classifier=osgi.bundle))' output='${repoUrl}/plugins/${id}_${version}.jar'/>
+    <rule filter='(&amp; (classifier=binary))' output='${repoUrl}/binary/${id}_${version}'/>
+    <rule filter='(&amp; (classifier=org.eclipse.update.feature))' output='${repoUrl}/features/${id}_${version}.jar'/>
+  </mappings>
+  <artifacts size='6'>
+    <artifact classifier='osgi.bundle' id='org.eclipse.osgi' version='3.13.200.v20181130-2106'>
+      <properties size='3'>
+        <property name='artifact.size' value='1450076'/>
+        <property name='download.size' value='1450076'/>
+        <property name='download.md5' value='7957888c544d6f046f7695015aa2f139'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='org.apache.felix.gogo.shell' version='0.12.0'>
+      <properties size='3'>
+        <property name='artifact.size' value='54420'/>
+        <property name='download.size' value='54420'/>
+        <property name='download.md5' value='8865c1a2beadb1ef2165f65c9cb44bae'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='org.apache.felix.scr' version='2.1.0'>
+      <properties size='3'>
+        <property name='artifact.size' value='412878'/>
+        <property name='download.size' value='412878'/>
+        <property name='download.md5' value='70bae20e087e6d451f2eb79a182b2d0a'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='org.eclipse.equinox.console' version='1.1.200.v20150929-1405'>
+      <properties size='3'>
+        <property name='artifact.size' value='120794'/>
+        <property name='download.size' value='120794'/>
+        <property name='download.md5' value='107aea01eb4427afdf05a5af6daffcd7'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='org.apache.felix.gogo.command' version='0.12.0'>
+      <properties size='3'>
+        <property name='artifact.size' value='51746'/>
+        <property name='download.size' value='51746'/>
+        <property name='download.md5' value='64fb71b7a19cc766819c7a0dc2e9b2d5'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='org.apache.felix.gogo.runtime' version='0.12.0'>
+      <properties size='3'>
+        <property name='artifact.size' value='67862'/>
+        <property name='download.size' value='67862'/>
+        <property name='download.md5' value='64a3a3ca7e260186c86b56c0ef4269f1'/>
+      </properties>
+    </artifact>
+  </artifacts>
+</repository>

@@ -1,7 +1,7 @@
 import aQute.bnd.gradle.Bundle
 
 buildscript {
-    ext.felixPluguin = '0.33'
+    ext.felixPluguin = '0.38'
 
     repositories {
         mavenCentral()
@@ -13,7 +13,7 @@ buildscript {
 }
 
 plugins {
-    id 'org.felix.osgi' version '0.36'
+    id 'org.felix.osgi' version '0.38'
 }
 
 apply plugin: 'java'

@@ -13,12 +13,17 @@ import org.eclipse.equinox.p2.repository.metadata.IMetadataRepositoryManager;
 import p2.utils.common.ServicesUtil;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static p2.utils.Constants.CREATED;
 import static p2.utils.Constants.REPOSITORY_DIR_NAME;
@@ -44,6 +49,10 @@ public class DownloadProfiles {
         Set<IInstallableUnit> installableUnitsFromProfile = profile.query(QueryUtil.ALL_UNITS, new NullProgressMonitor()).toUnmodifiableSet();
         java.nio.file.Path userRepositories = Paths.get(BUILD_DIR, REPOSITORY_DIR_NAME, userNameQueryParam, CREATED);
         // refactor to java 8 using files.walk
+
+        File resultFolder = new File(BUILD_DIR + File.separator + "download" + File.separator + profileName);
+
+
         List<File> repositories = Arrays.asList(Objects.requireNonNull(userRepositories.toFile().listFiles()));
         for (File repository : repositories) {
             for (Iterator<IInstallableUnit> iterator = installableUnitsFromProfile.iterator(); iterator.hasNext(); ) {
@@ -55,10 +64,10 @@ public class DownloadProfiles {
                 if (toInstall.size() != 0) {
                     for (IInstallableUnit installableUnit : toInstall) {
                         List<String> args = new ArrayList<String>();
-                        args.add(BUILD_DIR + File.separator + "p2Director.bat"); // command name
+                        args.add(BUILD_DIR + File.separator + "p2Agent" + File.separator + "p2Director.bat"); // command name
                         args.add(installableUnit.getId()); // IU for install
                         args.add(metadataRepo.getLocation().toString()); // source
-                        args.add(BUILD_DIR + File.separator + profileName); // destination
+                        args.add(resultFolder.getAbsolutePath()); // destination
 
                         ProcessBuilder pb = new ProcessBuilder(args);
 
@@ -69,70 +78,49 @@ public class DownloadProfiles {
                     iterator.remove();
                 }
             }
-
-//            Path newRepositoryPath = Paths.get(BUILD_DIR, "profiles");
-//
-//            IPublisherInfo info = PublishBundles.createPublisherRepository(
-//                    newRepositoryPath);
-//            IPublisherAction[] actions = PublishBundles.publishEverything(
-//                    Paths.get(metadataRepo.getLocation()));
-//            Publisher publisher = new Publisher(info);
-//            publisher.publish(actions, new NullProgressMonitor());
-//            for(String installableUnit: installableUnitsFromProfile) {
-//                IMetadataRepository metadataRepo = metadataManager.loadRepository(repository.toURI(), new NullProgressMonitor());
-//                Collection toInstall = metadataRepo.query(QueryUtil.createIUQuery(installableUnit), new NullProgressMonitor()).toUnmodifiableSet();
-//                // if it is found inside the repository, go install it
-//                if(toInstall.size() != 0){
-//                    ProvisioningSession session = new ProvisioningSession(agent);
-//                    InstallOperation installOperation = new InstallOperation(session, toInstall);
-//                    installOperation.setProfileId(profile.getProfileId());
-//
-//                    if (installOperation.resolveModal(new NullProgressMonitor()).isOK()) {
-//                        Job job = installOperation.getProvisioningJob(new NullProgressMonitor());
-//                        job.addJobChangeListener(new JobChangeAdapter() {
-//                            public void done(IJobChangeEvent event) {
-//                                System.out.println(event.getResult());
-////                          agent.stop();
-//                            }
-//                        });
-//                        job.schedule();
-//                    }
-//                }
         }
 
+        List<String> classpathOsgi = new ArrayList<>();
+        String osgiRuntimeBundleName = null;
+
+        File folder = Paths.get(resultFolder.toPath().toString(), "plugins").toFile();
+        File[] listOfFiles = folder.listFiles();
+        for (File file : listOfFiles) {
+            if (file.getName().contains("org.eclipse.osgi_")) {
+                osgiRuntimeBundleName = file.getName();
+            } else {
+                classpathOsgi.add(file.getName() + "@start");
+            }
+        }
+
+        String classpath = classpathOsgi.stream().collect(Collectors.joining(","));
+
+        File batFile = new File(resultFolder.getAbsolutePath(), "start.bat");
+        FileWriter writer = new FileWriter(batFile);
+        writer.write(String.format("java -Dosgi.bundles=%s -jar plugins/%s -console -consoleLog", classpath, osgiRuntimeBundleName));
+        writer.flush();
+        writer.close();
+
+        Path zip = pack(Paths.get(resultFolder.getAbsolutePath(), profileName).toString() , BUILD_DIR + File.separator + "download");
     }
 
-//    private void writeDataToDisk(File file) {
-//        String content = "This is the text content";
-//        try (FileOutputStream fop = new FileOutputStream(file)) {
-//
-//            // if file doesn't exists, then create it
-//            if (!file.exists()) {
-//                file.createNewFile();
-//            }
-//
-//            // get the content in bytes
-//            byte[] contentInBytes = content.getBytes();
-//
-//            fop.write(contentInBytes);
-//            fop.flush();
-//            fop.close();
-//
-//            System.out.println("Done");
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-
-//
-//        IPublisherInfo info = PublishBundles.createPublisherRepository(
-//                currentWorkingRepository);
-//        IPublisherAction[] actions = PublishBundles.publishEverything(
-//                UPLOAD_DIR);
-//        Publisher publisher = new Publisher(info);
-//        publisher.publish(actions, new NullProgressMonitor());
-
-//    }
+    public static Path pack(String sourceDirPath, String zipFilePath) throws IOException {
+        Path p = Files.createFile(Paths.get(zipFilePath));
+        try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(p))) {
+            Path pp = Paths.get(sourceDirPath);
+            Files.walk(pp)
+                    .filter(path -> !Files.isDirectory(path))
+                    .forEach(path -> {
+                        ZipEntry zipEntry = new ZipEntry(pp.relativize(path).toString());
+                        try {
+                            zs.putNextEntry(zipEntry);
+                            Files.copy(path, zs);
+                            zs.closeEntry();
+                        } catch (IOException e) {
+                            System.err.println(e);
+                        }
+                    });
+        }
+        return p;
+    }
 }
