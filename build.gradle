@@ -40,7 +40,6 @@ project.sourceSets.all { sourceSet ->
 
 
 dependencies {
-    testCompile("junit:junit")
 
     compile(group: 'org.eclipse.platform', name: 'org.eclipse.equinox.p2.publisher', version: '1.4.200')
     compile(group: 'org.eclipse.platform', name: 'org.eclipse.equinox.p2.publisher.eclipse', version: '1.2.201')
