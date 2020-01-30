@@ -1,1 +1,0 @@
-java -Dosgi.bundles=org.apache.felix.gogo.command_0.12.0.jar@start,org.apache.felix.gogo.runtime_0.12.0.jar@start,org.apache.felix.gogo.shell_0.12.0.jar@start,org.apache.felix.scr_2.1.0.jar@start,org.eclipse.equinox.console_1.1.200.v20150929-1405.jar@start -jar plugins/org.eclipse.osgi_3.13.200.v20181130-2106.jar -console -consoleLog

@@ -1,1 +1,0 @@
-java -jar D:\back-end-p2\P2-Server\build\p2Container\plugins\org.eclipse.osgi_3.13.200.jar -console -configuration configuration
